@@ -50,6 +50,13 @@ public class UserController {
 
     private Long parseUserIdFromToken(String token) {
         String username = jwtTokenProvider.getUsernameFromToken(token);
-        return 1L; // 示例值
+        // 从 UserService 中获取 UserDetails
+        org.springframework.security.core.userdetails.UserDetails userDetails = userService.loadUserByUsername(username);
+        // 这里假设 UserDetails 中的 username 就是 User 中的 phone 字段
+        User user = userService.findUserByPhone(username);
+        if (user != null) {
+            return user.getId();
+        }
+        return null;
     }
 }

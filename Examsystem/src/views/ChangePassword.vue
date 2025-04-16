@@ -1,17 +1,16 @@
-<!-- Examsystem/src/views/ChangePassword.vue -->
 <template>
   <div class="change-password-container">
     <el-card class="change-password-card">
       <h2>修改密码</h2>
       <el-form ref="passwordForm" :model="form" :rules="rules">
         <el-form-item label="原密码" prop="oldPassword">
-          <el-input type="password" v-model="form.oldPassword" placeholder="请输入原密码" title="请输入身份证后 6 位或修改后的密码"></el-input>
+          <el-input type="password" v-model="form.oldPassword" placeholder="请输入原密码"></el-input>
         </el-form-item>
         <el-form-item label="新密码" prop="newPassword">
-          <el-input type="password" v-model="form.newPassword" placeholder="请输入新密码" title="密码必须包含大写字母、小写字母、数字和特殊字符，且长度不少于 8 位"></el-input>
+          <el-input type="password" v-model="form.newPassword" placeholder="请输入新密码"></el-input>
         </el-form-item>
         <el-form-item label="确认新密码" prop="confirmPassword">
-          <el-input type="password" v-model="form.confirmPassword" placeholder="请确认新密码" title="请再次输入新密码以确认"></el-input>
+          <el-input type="password" v-model="form.confirmPassword" placeholder="请确认新密码"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm">修改密码</el-button>
@@ -46,7 +45,7 @@ export default {
         ],
         newPassword: [
           { required: true, message: '请输入新密码', trigger: 'blur' },
-          { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/, message: '密码必须包含大写字母、小写字母、数字和特殊字符，且长度不少于 8 位', trigger: 'blur' }
+          { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/, message: '密码必须包含大写字母、小写字母、数字和特殊字符，且长度不少于8位', trigger: 'blur' }
         ],
         confirmPassword: [
           { required: true, message: '请确认新密码', trigger: 'blur' },
@@ -59,7 +58,13 @@ export default {
     submitForm() {
       this.$refs.passwordForm.validate((valid) => {
         if (valid) {
+          // 从本地存储中获取 token
           const token = localStorage.getItem('token');
+          if (!token) {
+            this.$message.error('未登录，请先登录');
+            this.$router.push('/login');
+            return;
+          }
           request.post('/api/user/change-password', {
             oldPassword: this.form.oldPassword,
             newPassword: this.form.newPassword
@@ -70,16 +75,17 @@ export default {
           })
               .then(response => {
                 if (response.code === "200") {
-                  this.$message.success('密码修改成功，请重新登录');
-                  localStorage.clear();
+                  this.$message.success('密码修改成功');
+                  // 清除 token，跳转到登录页
+                  localStorage.removeItem('token');
                   this.$router.push('/login');
                 } else {
-                  this.$message.error(response.message);
+                  this.$message.error(response.message || '密码修改失败');
                 }
               })
               .catch(error => {
                 console.error('Change password error:', error);
-                this.$message.error('修改密码失败，请稍后重试');
+                this.$message.error('请求出错，请稍后重试');
               });
         }
       });
@@ -87,3 +93,18 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.change-password-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.change-password-card {
+  width: 400px;
+  padding: 20px;
+}
+</style>

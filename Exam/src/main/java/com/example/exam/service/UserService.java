@@ -186,4 +186,8 @@ public class UserService implements UserDetailsService {
             userMapper.updateById(user);
         }
     }
+
+    public User findUserByPhone(String phone) {
+        return userMapper.selectOne(new QueryWrapper<User>().eq("phone", phone));
+    }
 }

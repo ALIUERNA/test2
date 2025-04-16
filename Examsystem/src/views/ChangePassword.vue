@@ -55,40 +55,28 @@ export default {
     };
   },
   methods: {
-    submitForm() {
-      this.$refs.passwordForm.validate((valid) => {
-        if (valid) {
-          // 从本地存储中获取 token
-          const token = localStorage.getItem('token');
-          if (!token) {
-            this.$message.error('未登录，请先登录');
-            this.$router.push('/login');
-            return;
-          }
-          request.post('/api/user/change-password', {
-            oldPassword: this.form.oldPassword,
-            newPassword: this.form.newPassword
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          })
-              .then(response => {
-                if (response.code === "200") {
-                  this.$message.success('密码修改成功');
-                  // 清除 token，跳转到登录页
-                  localStorage.removeItem('token');
-                  this.$router.push('/login');
-                } else {
-                  this.$message.error(response.message || '密码修改失败');
-                }
-              })
-              .catch(error => {
-                console.error('Change password error:', error);
-                this.$message.error('请求出错，请稍后重试');
-              });
+    async submitForm() {
+      try {
+        const isValid = await new Promise((resolve) => {
+          this.$refs.passwordForm.validate((valid) => {
+            resolve(valid);
+          });
+        });
+
+        if (isValid) {
+          const { oldPassword, newPassword } = this.form;
+          const response = await request.post('/api/user/change-password', {
+            oldPassword,
+            newPassword
+          });
+
+          this.$message.success('密码修改成功');
+          this.$router.push('/login');
         }
-      });
+      } catch (error) {
+        console.error('Change password error:', error);
+        this.$message.error('密码修改失败，请检查输入或稍后重试');
+      }
     }
   }
 };

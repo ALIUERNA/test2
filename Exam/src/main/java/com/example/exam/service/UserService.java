@@ -5,6 +5,7 @@ import com.example.exam.common.Result;
 import com.example.exam.entity.User;
 import com.example.exam.mapper.UserMapper;
 import com.example.exam.security.ExamUserDetails;
+import com.example.exam.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +27,9 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider; // 注入 JwtTokenProvider
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // 初始化管理员账户
@@ -34,11 +38,10 @@ public class UserService implements UserDetailsService {
         if (!adminExists()) {
             User admin = new User();
             admin.setPhone("admin");
-            admin.setPassword(encryptPassword("admin123"));
-            admin.setName("系统管理员");
+            admin.setPhone("123");
             admin.setEmail("admin@example.com");
-            admin.setIsAdmin(true);
-            admin.setIsActive(true);
+            admin.setName("管理员");
+            admin.setPassword(encryptPassword("123"));
             userMapper.insert(admin);
         }
     }
@@ -93,7 +96,7 @@ public class UserService implements UserDetailsService {
         }
 
         Map<String, Object> data = new HashMap<>();
-        data.put("token", generateToken(user));
+        data.put("token", generateToken(user)); // 调用 generateToken 方法
         data.put("userInfo", buildUserInfo(user));
 
         return Result.success(data);
@@ -162,8 +165,15 @@ public class UserService implements UserDetailsService {
     }
 
     private String generateToken(User user) {
-        // 实现生成Token的逻辑
-        return "your_token_here";
+        // 创建 UserDetails 对象
+        UserDetails userDetails = new ExamUserDetails(
+                user.getPhone(),
+                user.getPassword(),
+                getAuthorities(user.getIsAdmin()),
+                user.getIsActive()
+        );
+        // 调用 JwtTokenProvider 的 generateToken 方法
+        return jwtTokenProvider.generateToken(userDetails);
     }
 
     private Map<String, Object> buildUserInfo(User user) {

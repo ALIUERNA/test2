@@ -50,7 +50,6 @@ public class UserController {
 
     private Long parseUserIdFromToken(String token) {
         String username = jwtTokenProvider.getUsernameFromToken(token);
-        // 实现从用户名获取用户ID的逻辑
         return 1L; // 示例值
     }
 }

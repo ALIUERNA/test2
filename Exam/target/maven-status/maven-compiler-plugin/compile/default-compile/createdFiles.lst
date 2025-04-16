@@ -1,0 +1,4 @@
+com\example\exam\common\Result.class
+com\example\exam\ExamApplication.class
+com\example\exam\common\CorsConfig.class
+com\example\exam\controller\QuestionController.class

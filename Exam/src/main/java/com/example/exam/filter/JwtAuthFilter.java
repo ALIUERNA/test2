@@ -27,9 +27,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         try {
             String token = extractToken(request);
             if (token != null && jwtTokenProvider.validateToken(token)) {
@@ -45,7 +44,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             logger.error("认证失败", ex);
         }
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response); // 确保请求继续处理
     }
 
     private String extractToken(HttpServletRequest request) {

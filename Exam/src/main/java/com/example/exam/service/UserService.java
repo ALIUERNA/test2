@@ -175,18 +175,6 @@ public class UserService implements UserDetailsService {
         return info;
     }
 
-    // 更新已有用户的密码为 BCrypt 编码
-    @Transactional
-    public void updatePasswordsToBCrypt() {
-        List<User> users = userMapper.selectList(null);
-        for (User user : users) {
-            String rawPassword = user.getPassword();
-            String encodedPassword = passwordEncoder.encode(rawPassword);
-            user.setPassword(encodedPassword);
-            userMapper.updateById(user);
-        }
-    }
-
     public User findUserByPhone(String phone) {
         return userMapper.selectOne(new QueryWrapper<User>().eq("phone", phone));
     }

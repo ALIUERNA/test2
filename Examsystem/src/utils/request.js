@@ -3,7 +3,7 @@
 
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { useRouter } from 'vue-router';
+import router from '../router';
 
 // 创建 axios 实例
 const request = axios.create({
@@ -52,9 +52,6 @@ request.interceptors.response.use(
         return response.data;
     },
     (error) => {
-        // 获取路由实例
-        const router = useRouter();
-
         // 处理 HTTP 错误状态码
         if (error.response) {
             switch (error.response.status) {

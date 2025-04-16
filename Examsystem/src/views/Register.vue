@@ -64,7 +64,7 @@ export default {
 
           request.post('/api/user/register', this.form)
               .then(response => {
-                if (response.code === 200) {
+                if (response.code === "200") {
                   this.$message.success('注册成功，请登录');
                   this.$router.push('/login');
                 } else {

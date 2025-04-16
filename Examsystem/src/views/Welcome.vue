@@ -28,6 +28,7 @@
       <div class="action-area">
         <h2>开始使用</h2>
         <div class="buttons">
+          <!-- 未登录状态 -->
           <el-button
               v-if="!isLoggedIn"
               type="primary"
@@ -44,6 +45,22 @@
             注册账号
           </el-button>
           <el-button
+              v-if="!isLoggedIn"
+              size="large"
+              @click="$router.push('/admin/register')"
+          >
+            管理员登录/注册
+          </el-button>
+          <!-- 登录后普通用户状态 -->
+          <el-button
+              v-if="isLoggedIn && !isAdmin"
+              type="success"
+              size="large"
+              @click="$router.push('/change-password')"
+          >
+            修改密码
+          </el-button>
+          <el-button
               v-if="isLoggedIn && !isAdmin"
               type="success"
               size="large"
@@ -52,21 +69,53 @@
             开始考试
           </el-button>
           <el-button
-              v-if="isLoggedIn && isAdmin"
-              type="warning"
+              v-if="isLoggedIn && !isAdmin"
+              type="success"
               size="large"
-              @click="$router.push('/admin/import-questions')"
+              @click="$router.push('/test-records')"
           >
-            管理题目
+            测试次数/分数
           </el-button>
-          <!-- 添加注销按钮 -->
           <el-button
-              v-if="isLoggedIn"
+              v-if="isLoggedIn && !isAdmin"
               type="info"
               size="large"
               @click="handleLogout"
           >
             退出登录
+          </el-button>
+          <!-- 登录后管理员状态 -->
+          <el-button
+              v-if="isLoggedIn && isAdmin"
+              type="warning"
+              size="large"
+              @click="$router.push('/admin/import-questions')"
+          >
+            试卷导入
+          </el-button>
+          <el-button
+              v-if="isLoggedIn && isAdmin"
+              type="warning"
+              size="large"
+              @click="$router.push('/admin/view-questions')"
+          >
+            查看试题
+          </el-button>
+          <el-button
+              v-if="isLoggedIn && isAdmin"
+              type="info"
+              size="large"
+              @click="handleLogout"
+          >
+            退出登录
+          </el-button>
+          <el-button
+              v-if="isLoggedIn && isAdmin"
+              type="success"
+              size="large"
+              @click="$router.push('/change-password')"
+          >
+            修改密码
           </el-button>
         </div>
       </div>

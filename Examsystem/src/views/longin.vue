@@ -30,11 +30,11 @@ export default {
       },
       rules: {
         phone: [
-          {required: true, message: '请输入手机号', trigger: 'blur'},
-          {pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
         ],
         password: [
-          {required: true, message: '请输入密码', trigger: 'blur'}
+          { required: true, message: '请输入密码', trigger: 'blur' }
         ]
       }
     };
@@ -45,18 +45,23 @@ export default {
         if (valid) {
           request.post('/api/user/login', this.form)
               .then(response => {
-                // 清除旧缓存
-                localStorage.clear();
+                if (response && response.data && response.data.token) {
+                  // 清除旧缓存
+                  localStorage.clear();
 
-                // 存储新登录状态
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('userId', response.data.userId);
-                localStorage.setItem('isAdmin', response.data.isAdmin || false);
+                  // 存储新登录状态
+                  localStorage.setItem('token', response.data.token);
+                  localStorage.setItem('userId', response.data.userId);
+                  localStorage.setItem('isAdmin', response.data.isAdmin || false);
 
-                // 明确跳转到主页
-                this.$router.push('/').then(() => {
-                  window.location.reload(); // 强制刷新清除Vue状态缓存
-                });
+                  // 明确跳转到主页
+                  this.$router.push('/').then(() => {
+                    window.location.reload(); // 强制刷新清除Vue状态缓存
+                  });
+                } else {
+                  this.$message.error('登录失败：未获取到有效的 token');
+                  localStorage.clear(); // 失败时清除状态
+                }
               })
               .catch(error => {
                 this.$message.error('登录失败: ' + error.message);
@@ -66,8 +71,7 @@ export default {
       });
     }
   }
-}
-
+};
 </script>
 
 <style scoped>

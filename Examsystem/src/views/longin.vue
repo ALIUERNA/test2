@@ -11,6 +11,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm">登录</el-button>
+          <el-button type="text" @click="$router.push('/change-password')">忘记密码？</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -29,11 +30,11 @@ export default {
       },
       rules: {
         phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+          {required: true, message: '请输入手机号', trigger: 'blur'},
+          {pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
+          {required: true, message: '请输入密码', trigger: 'blur'}
         ]
       }
     };
@@ -44,17 +45,28 @@ export default {
         if (valid) {
           request.post('/api/user/login', this.form)
               .then(response => {
+                // 清除旧缓存
+                localStorage.clear();
+
+                // 存储新登录状态
                 localStorage.setItem('token', response.data.token);
-                this.$router.push('/test');
+                localStorage.setItem('userId', response.data.userId);
+                localStorage.setItem('isAdmin', response.data.isAdmin || false);
+
+                // 明确跳转到主页
+                this.$router.push('/').then(() => {
+                  window.location.reload(); // 强制刷新清除Vue状态缓存
+                });
               })
               .catch(error => {
-                console.error('Login error:', error);
+                this.$message.error('登录失败: ' + error.message);
+                localStorage.clear(); // 失败时清除状态
               });
         }
       });
     }
   }
-};
+}
 </script>
 
 <style scoped>

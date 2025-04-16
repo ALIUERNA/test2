@@ -11,12 +11,14 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/longin.vue')
+      component: () => import('../views/longin.vue'),
+      meta: { requiresGuest: true } // 添加这个meta，已登录用户不应该看到登录页
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('../views/Register.vue')
+      component: () => import('../views/Register.vue'),
+      meta: { requiresGuest: true }
     },
     {
       path: '/change-password',
@@ -59,13 +61,25 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('token') !== null
   const isAdmin = localStorage.getItem('isAdmin') === 'true'
 
+  // 如果用户已登录但尝试访问需要游客状态的页面
+  if (to.meta.requiresGuest && isAuthenticated) {
+    next('/') // 重定向到首页
+    return
+  }
+
+  // 如果页面需要登录但用户未登录
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
-  } else if (to.meta.requiresAdmin && !isAdmin) {
-    next('/404') // 或者可以跳转到无权限页面
-  } else {
-    next()
+    return
   }
+
+  // 如果页面需要管理员权限但用户不是管理员
+  if (to.meta.requiresAdmin && !isAdmin) {
+    next('/404') // 或者可以跳转到无权限页面
+    return
+  }
+
+  next()
 })
 
 export default router

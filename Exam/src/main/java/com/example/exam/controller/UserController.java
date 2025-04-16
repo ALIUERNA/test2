@@ -1,10 +1,12 @@
 package com.example.exam.controller;
 
 import com.example.exam.common.Result;
-
 import com.example.exam.entity.User;
+import com.example.exam.security.JwtTokenProvider;
 import com.example.exam.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,25 +16,41 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
-        boolean success = userService.register(user);
-        return success ? Result.success() : Result.error("注册失败");
+        return userService.register(user);
     }
 
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
-        User loggedInUser = userService.login(user.getPhone(), user.getPassword());
-        if (loggedInUser != null) {
-            return Result.success(loggedInUser);
-        } else {
-            return Result.error("登录失败");
-        }
+        return userService.login(user.getPhone(), user.getPassword());
     }
 
     @PostMapping("/change-password")
-    public Result changePassword(@RequestBody User user) {
-        boolean success = userService.changePassword(user.getId(), user.getPassword());
-        return success ? Result.success() : Result.error("修改密码失败");
+    public Result changePassword(
+            @RequestHeader("Authorization") String token,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword
+    ) {
+        Long userId = parseUserIdFromToken(token);
+        return userService.changePassword(userId, oldPassword, newPassword);
+    }
+
+    @PostMapping("/admin/set-privilege")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result setAdminPrivilege(
+            @RequestParam Long userId,
+            @RequestParam Boolean isAdmin
+    ) {
+        return userService.setAdminPrivilege(userId, isAdmin);
+    }
+
+    private Long parseUserIdFromToken(String token) {
+        String username = jwtTokenProvider.getUsernameFromToken(token);
+        // 实现从用户名获取用户ID的逻辑
+        return 1L; // 示例值
     }
 }

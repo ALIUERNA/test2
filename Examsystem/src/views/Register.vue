@@ -2,7 +2,7 @@
   <div class="register-container">
     <el-card class="register-card">
       <h2>在线考试系统注册</h2>
-      <el-form ref="registerForm" :model="form" :rules="rules">
+      <el-form ref="registerForm" :model="form" :rules="rules" @submit.prevent="submitForm">
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号"></el-input>
         </el-form-item>
@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import request from '@/utils/request';
+import request from '@/utils/request.js';
 
 export default {
   data() {
@@ -33,7 +33,8 @@ export default {
         phone: '',
         idCard: '',
         name: '',
-        email: ''
+        email: '',
+        password: '' // 添加 password 字段
       },
       rules: {
         phone: [
@@ -58,14 +59,18 @@ export default {
     submitForm() {
       this.$refs.registerForm.validate((valid) => {
         if (valid) {
+          // 设置密码为身份证号的后六位
+          this.form.password = this.form.idCard.slice(-6);
+
           request.post('/api/user/register', this.form)
               .then(response => {
-                this.$message.success('注册成功，请登录');
-                this.$router.push('/login');
+                if (response.code === 200) {
+                  this.$message.success('注册成功，请登录');
+                  this.$router.push('/login');
+                } else {
+                  this.$message.error(response.message || '注册失败');
+                }
               })
-              .catch(error => {
-                console.error('Register error:', error);
-              });
         }
       });
     }

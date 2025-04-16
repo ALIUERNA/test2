@@ -3,6 +3,11 @@
     <div class="header">
       <h1>欢迎使用在线考试系统</h1>
       <p>一个高效、便捷的在线学习和考试平台</p>
+      <!-- 登录后显示用户名 -->
+      <div v-if="isLoggedIn" class="user-info">
+        <el-icon><User /></el-icon>
+        <span>欢迎您，{{ userPhone }}</span>
+      </div>
     </div>
 
     <div class="main-content">
@@ -27,7 +32,7 @@
               v-if="!isLoggedIn"
               type="primary"
               size="large"
-              @click="$router.push('/login')"
+              @click="navigateToLogin"
           >
             立即登录
           </el-button>
@@ -54,6 +59,15 @@
           >
             管理题目
           </el-button>
+          <!-- 添加注销按钮 -->
+          <el-button
+              v-if="isLoggedIn"
+              type="info"
+              size="large"
+              @click="handleLogout"
+          >
+            退出登录
+          </el-button>
         </div>
       </div>
     </div>
@@ -65,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   User,
@@ -78,12 +92,19 @@ import {
 
 const router = useRouter()
 
-// 检查登录状态
-const isLoggedIn = computed(() => localStorage.getItem('token') !== null)
+// 用户手机号（从localStorage获取）
+const userPhone = ref(localStorage.getItem('phone') || '')
+
+// 检查登录状态（严格模式）
+const isLoggedIn = computed(() => {
+  const token = localStorage.getItem('token')
+  return !!token // 严格布尔转换
+})
+
 const isAdmin = computed(() => localStorage.getItem('isAdmin') === 'true')
 
 // 系统特性展示
-const features = ref([
+const features = [
   {
     icon: User,
     title: '用户友好',
@@ -120,15 +141,21 @@ const features = ref([
     description: '完整保存您的考试历史和进步轨迹',
     color: '#B37FEB'
   }
-])
+]
 
-// 如果是已登录用户，根据角色跳转到对应页面
-if (isLoggedIn.value) {
-  if (isAdmin.value) {
-    router.push('/admin/import-questions')
-  } else {
-    router.push('/exam')
+// 导航到登录页（带错误处理）
+const navigateToLogin = () => {
+  try {
+    router.push('/login')
+  } catch (error) {
+    console.error('路由跳转失败:', error)
   }
+}
+
+// 注销登录
+const handleLogout = () => {
+  localStorage.clear()
+  window.location.reload() // 强制刷新页面以清除所有状态
 }
 </script>
 
@@ -145,6 +172,7 @@ if (isLoggedIn.value) {
   padding: 40px 0;
   background: linear-gradient(135deg, #409EFF, #79BBFF);
   color: white;
+  position: relative;
 }
 
 .header h1 {
@@ -155,6 +183,19 @@ if (isLoggedIn.value) {
 .header p {
   font-size: 1.2rem;
   opacity: 0.9;
+}
+
+.user-info {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 15px;
+  border-radius: 20px;
 }
 
 .main-content {
@@ -169,6 +210,7 @@ if (isLoggedIn.value) {
   text-align: center;
   margin-bottom: 20px;
   transition: transform 0.3s;
+  cursor: default;
 }
 
 .feature-card:hover {
@@ -188,6 +230,7 @@ if (isLoggedIn.value) {
 .feature-card p {
   color: #666;
   line-height: 1.6;
+  padding: 0 10px;
 }
 
 .action-area {
@@ -205,6 +248,7 @@ if (isLoggedIn.value) {
   display: flex;
   justify-content: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .footer {
@@ -212,5 +256,24 @@ if (isLoggedIn.value) {
   padding: 20px;
   background-color: #e4e7ed;
   color: #666;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .el-col {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .user-info {
+    position: static;
+    justify-content: center;
+    margin-top: 15px;
+  }
 }
 </style>

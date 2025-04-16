@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
@@ -27,8 +26,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/api/user/register") || requestURI.equals("/api/user/login")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = extractToken(request);
             if (token != null && jwtTokenProvider.validateToken(token)) {
@@ -42,14 +48,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception ex) {
-            logger.error("认证失败", ex);
+            // 记录日志
+            System.err.println("认证失败: " + ex.getMessage());
         }
-        filterChain.doFilter(request, response); // 确保请求继续处理
+        filterChain.doFilter(request, response);
     }
 
     private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;

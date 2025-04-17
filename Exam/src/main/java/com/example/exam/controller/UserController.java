@@ -7,7 +7,11 @@ import com.example.exam.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -31,12 +35,30 @@ public class UserController {
 
     @PostMapping("/change-password")
     public Result changePassword(
-            @RequestHeader("Authorization") String token,
             @RequestParam String oldPassword,
             @RequestParam String newPassword
     ) {
-        Long userId = parseUserIdFromToken(token);
-        return userService.changePassword(userId, oldPassword, newPassword);
+        // 从SecurityContext获取已认证的用户信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName(); // 这里对应用户的phone
+
+        User user = userService.findUserByPhone(username);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 调用Service层方法
+        return userService.changePassword(user.getId(), oldPassword, newPassword);
+    }
+    @PostMapping("/admin/register")
+    public Result adminRegister(@RequestBody User user) {
+        return userService.adminRegister(user);
+    }
+    @PostMapping("/admin/login")
+    public Result adminLogin(@RequestBody Map<String, String> loginInfo) {
+        String username = loginInfo.get("username");
+        String password = loginInfo.get("password");
+        return userService.adminLogin(username, password);
     }
 
     @PostMapping("/admin/set-privilege")

@@ -17,15 +17,17 @@ const SUCCESS_CODE = '200'; // 后端返回的 code 为字符串类型
 // 请求拦截器
 request.interceptors.request.use(
     (config) => {
-        // 获取 token
-        const token = localStorage.getItem('token');
+        // 获取 token 并去除空格
+        const token = localStorage.getItem('token')?.trim();
         if (token) {
             // 如果有 token，设置到请求头中
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         // 设置请求头的 Content-Type
         config.headers['Content-Type'] = 'application/json;charset=utf-8';
+        console.log('Authorization Header:', config.headers['Authorization']);
         return config;
+
     },
     (error) => {
         // 请求发送失败时的处理

@@ -49,8 +49,9 @@ export default {
                   // 清除旧缓存
                   localStorage.clear();
 
-                  // 存储新登录状态
-                  localStorage.setItem('token', response.data.token);
+                  // 存储新登录状态，去除 Token 前后空格
+                  const token = response.data.token.trim();
+                  localStorage.setItem('token', token);
                   localStorage.setItem('userId', response.data.userId);
                   localStorage.setItem('isAdmin', response.data.isAdmin || false);
 

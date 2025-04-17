@@ -44,12 +44,20 @@
           >
             注册账号
           </el-button>
+          <!-- 拆分后的管理员注册和登录按钮 -->
           <el-button
               v-if="!isLoggedIn"
               size="large"
               @click="$router.push('/admin/register')"
           >
-            管理员登录/注册
+            管理员注册
+          </el-button>
+          <el-button
+              v-if="!isLoggedIn"
+              size="large"
+              @click="$router.push('/admin/login')"
+          >
+            管理员登录
           </el-button>
           <!-- 登录后普通用户状态 -->
           <el-button
@@ -150,6 +158,7 @@ const isLoggedIn = computed(() => {
   return !!token // 严格布尔转换
 })
 
+// 检查是否是管理员
 const isAdmin = computed(() => localStorage.getItem('isAdmin') === 'true')
 
 // 系统特性展示

@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 启用 CORS
                 .csrf(csrf -> csrf.disable()) // 禁用 CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**","api/user/login","api/user/register","/api/user/change-password").permitAll()
+                        .requestMatchers("/api/admin/**","api/user/login","api/user/register","/api/user/change-password","api/user/admin/register","api/user/admin/login").permitAll()
                         .requestMatchers("/api/user/change-password").authenticated() // 允许已认证用户访问
                         .requestMatchers("/api/auth/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

@@ -4,7 +4,18 @@ spring:
     url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
     username: root
     password: 123456  # 去掉引号
-mybatis-plus:  # 注意这里改为 mybatis-plus
+
+  # JWT 配置
+jwt:
+  secret: "OAf68/ArXZbnRKdLSyDUMv2CL2AB0JZn5pSbcrw5K9o="  # 至少32字符的密钥
+  validity-in-ms: 86400000  # 令牌有效期（24小时）
+
+mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 开启 SQL 日志
     map-underscore-to-camel-case: true  # 下划线转驼峰
+
+# 可选：日志级别调整
+logging:
+  level:
+    com.example.exam: DEBUG

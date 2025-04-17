@@ -65,9 +65,15 @@ export default {
 
         if (isValid) {
           const { oldPassword, newPassword } = this.form;
-          const response = await request.post('/api/user/change-password', {
-            oldPassword,
-            newPassword
+          const token = localStorage.getItem('token')?.trim(); // 对获取的token去除前后空格
+          const response = await request.post('/api/user/change-password', null, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            params: {
+              oldPassword,
+              newPassword
+            }
           });
 
           this.$message.success('密码修改成功');

@@ -5,6 +5,7 @@ import com.example.exam.common.Result;
 import com.example.exam.entity.User;
 import com.example.exam.mapper.UserMapper;
 import com.example.exam.security.ExamUserDetails;
+import com.example.exam.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,6 +15,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +28,9 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider; // 注入 JwtTokenProvider
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -92,9 +98,12 @@ public class UserService implements UserDetailsService {
             return Result.error("账户已被禁用");
         }
 
+        String token = generateToken(user);
+        logger.info("生成的令牌:{}",token); // 输出生成的令牌
+
         Map<String, Object> data = new HashMap<>();
-        data.put("token", generateToken(user));
-        data.put("userInfo", buildUserInfo(user));
+        data.put("token",token);
+        data.put("userInfo",buildUserInfo(user));
 
         return Result.success(data);
     }
@@ -162,8 +171,14 @@ public class UserService implements UserDetailsService {
     }
 
     private String generateToken(User user) {
-        // 实现生成Token的逻辑
-        return "your_token_here";
+        ExamUserDetails userDetails = new ExamUserDetails(
+                user.getPhone(),
+                user.getPassword(),
+                getAuthorities(user.getIsAdmin()),
+                user.getIsActive()
+        );
+        System.out.println( jwtTokenProvider.generateToken(userDetails));
+        return jwtTokenProvider.generateToken(userDetails);
     }
 
     private Map<String, Object> buildUserInfo(User user) {
@@ -177,5 +192,57 @@ public class UserService implements UserDetailsService {
 
     public User findUserByPhone(String phone) {
         return userMapper.selectOne(new QueryWrapper<User>().eq("phone", phone));
+    }
+    // 管理员注册
+    // 管理员注册
+    @Transactional
+    public Result adminRegister(User user) {
+        user.setIsAdmin(true); // 设置为管理员
+        user.setIsActive(true);
+
+        // 确保密码被加密
+        user.setPassword(encryptPassword(user.getPassword()));
+
+        if (user.getName() == null || user.getName().isEmpty()) {
+            String phone = user.getPhone();
+            String suffix = phone.length() >= 8 ? phone.substring(7) : "";
+            user.setName("管理员_" + suffix);
+        }
+
+        return userMapper.insert(user) > 0 ?
+                Result.success("管理员注册成功") :
+                Result.error("管理员注册失败");
+    }
+
+    // 管理员登录
+    @Transactional(readOnly = true)
+    public Result adminLogin(String username, String password) {
+        // 查询用户
+        User user = userMapper.selectOne(
+                new QueryWrapper<User>()
+                        .eq("name", username) // 使用用户名查询
+                        .select("id", "name", "password", "is_admin", "is_active")
+        );
+
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            return Result.error("用户名或密码错误");
+        }
+
+        if (!user.getIsActive()) {
+            return Result.error("账户已被禁用");
+        }
+
+        if (!user.getIsAdmin()) {
+            return Result.error("您不是管理员");
+        }
+
+        // 生成 token
+        String token = generateToken(user);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("token", token);
+        data.put("userInfo", buildUserInfo(user));
+
+        return Result.success(data);
     }
 }

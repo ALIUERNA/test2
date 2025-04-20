@@ -7,8 +7,10 @@ import com.example.exam.mapper.UserMapper;
 import com.example.exam.security.ExamUserDetails;
 import com.example.exam.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,29 +35,6 @@ public class UserService implements UserDetailsService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    // 初始化管理员账户
-    @Transactional
-    public void initAdminAccount() {
-        if (!adminExists()) {
-            User admin = new User();
-            admin.setPhone("admin");
-            admin.setPassword(encryptPassword("admin123"));
-            admin.setName("系统管理员");
-            admin.setEmail("admin@example.com");
-            admin.setIsAdmin(true);
-            admin.setIsActive(true);
-            userMapper.insert(admin);
-        }
-    }
-
-    private boolean adminExists() {
-        return userMapper.exists(
-                new QueryWrapper<User>()
-                        .eq("is_admin", true)
-                        .eq("phone", "admin")
-        );
-    }
 
     // 用户注册
     @Transactional
@@ -99,11 +78,11 @@ public class UserService implements UserDetailsService {
         }
 
         String token = generateToken(user);
-        logger.info("生成的令牌:{}",token); // 输出生成的令牌
+        logger.info("生成的令牌:{}", token); // 输出生成的令牌
 
         Map<String, Object> data = new HashMap<>();
-        data.put("token",token);
-        data.put("userInfo",buildUserInfo(user));
+        data.put("token", token);
+        data.put("userInfo", buildUserInfo(user));
 
         return Result.success(data);
     }
@@ -177,7 +156,6 @@ public class UserService implements UserDetailsService {
                 getAuthorities(user.getIsAdmin()),
                 user.getIsActive()
         );
-        System.out.println( jwtTokenProvider.generateToken(userDetails));
         return jwtTokenProvider.generateToken(userDetails);
     }
 
@@ -193,10 +171,14 @@ public class UserService implements UserDetailsService {
     public User findUserByPhone(String phone) {
         return userMapper.selectOne(new QueryWrapper<User>().eq("phone", phone));
     }
-    // 管理员注册
+
     // 管理员注册
     @Transactional
     public Result adminRegister(User user) {
+        if (userMapper.exists(new QueryWrapper<User>().eq("phone", user.getPhone()))) {
+            return Result.error("手机号已注册");
+        }
+
         user.setIsAdmin(true); // 设置为管理员
         user.setIsActive(true);
 
@@ -216,29 +198,31 @@ public class UserService implements UserDetailsService {
 
     // 管理员登录
     @Transactional(readOnly = true)
-    public Result adminLogin(String username, String password) {
-        // 查询用户
+    public Result adminLogin(String phone, String password) {
+        // 根据手机号查询用户
         User user = userMapper.selectOne(
                 new QueryWrapper<User>()
-                        .eq("name", username) // 使用用户名查询
-                        .select("id", "name", "password", "is_admin", "is_active")
+                        .eq("phone", phone)
+                        .select("id", "phone", "password", "is_admin", "is_active")
         );
 
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
-            return Result.error("用户名或密码错误");
+            return Result.error("手机号或密码错误");
         }
 
         if (!user.getIsActive()) {
             return Result.error("账户已被禁用");
         }
 
+        // 检查是否是管理员
         if (!user.getIsAdmin()) {
             return Result.error("您不是管理员");
         }
 
-        // 生成 token
+        // 生成令牌
         String token = generateToken(user);
 
+        // 构建返回数据
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
         data.put("userInfo", buildUserInfo(user));

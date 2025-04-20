@@ -41,7 +41,7 @@ const router = createRouter({
     {
       path: '/exam-result',
       name: 'exam-result',
-      component: () => import('../views/ExamResult.vue'),
+      component: () => import('../views/admin/ViewQuestions.vue'),
       meta: { requiresAuth: true }
     },
     {
@@ -60,6 +60,16 @@ const router = createRouter({
       name: 'admin-login',
       component: () => import('../views/AdminLogin.vue'),
       meta: { requiresGuest: true } // 确保只有未登录用户可以访问
+    },
+    // 在文档2的路由数组中添加
+    {
+      path: '/admin/view-questions',
+      name: 'view-questions',
+      component: () => import('../views/admin/ViewQuestions.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true
+      }
     },
     {
       path: '/:pathMatch(.*)*',

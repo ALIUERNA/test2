@@ -38,27 +38,25 @@ public class UserController {
             @RequestParam String oldPassword,
             @RequestParam String newPassword
     ) {
-        // 从SecurityContext获取已认证的用户信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // 这里对应用户的phone
-
+        String username = authentication.getName();
         User user = userService.findUserByPhone(username);
         if (user == null) {
             return Result.error("用户不存在");
         }
-
-        // 调用Service层方法
         return userService.changePassword(user.getId(), oldPassword, newPassword);
     }
+
     @PostMapping("/admin/register")
     public Result adminRegister(@RequestBody User user) {
         return userService.adminRegister(user);
     }
+
     @PostMapping("/admin/login")
     public Result adminLogin(@RequestBody Map<String, String> loginInfo) {
-        String username = loginInfo.get("username");
+        String phone = loginInfo.get("phone"); // 改为接收手机号
         String password = loginInfo.get("password");
-        return userService.adminLogin(username, password);
+        return userService.adminLogin(phone, password); // 传入手机号
     }
 
     @PostMapping("/admin/set-privilege")
@@ -72,9 +70,7 @@ public class UserController {
 
     private Long parseUserIdFromToken(String token) {
         String username = jwtTokenProvider.getUsernameFromToken(token);
-        // 从 UserService 中获取 UserDetails
         org.springframework.security.core.userdetails.UserDetails userDetails = userService.loadUserByUsername(username);
-        // 这里假设 UserDetails 中的 username 就是 User 中的 phone 字段
         User user = userService.findUserByPhone(username);
         if (user != null) {
             return user.getId();

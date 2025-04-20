@@ -37,11 +37,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = extractToken(request);
-            if (token != null) {
-                logger.info("传递回来的令牌:{}", token); // 输出传递回来的令牌
-                String bearerToken = request.getHeader("Authorization");
-                logger.info("Authorization header: {}", bearerToken);
-            }
             if (token != null && jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -53,7 +48,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception ex) {
-            // 记录日志
             logger.error("认证失败: {}", ex.getMessage());
         }
         filterChain.doFilter(request, response);
@@ -62,7 +56,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            // 去除"Bearer "前缀，并删除所有空格
             String token = bearerToken.substring(7).replaceAll("\\s+", "");
             return token;
         }

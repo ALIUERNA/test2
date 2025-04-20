@@ -1,0 +1,47 @@
+/* 颜色变量 */
+:root {
+    --bg-dark: #0a0e14;
+    --neon-blue: #00f3ff;
+    --neon-purple: #bc13fe;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --text-primary: rgba(255, 255, 255, 0.9);
+}
+
+/* 基础重置 */
+body {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* 玻璃拟态卡片 */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* 霓虹文字 */
+.neon-title {
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-blue);
+    letter-spacing: 2px;
+}
+
+/* 未来感按钮 */
+.el-button--future {
+    background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
+    border: none;
+    color: white !important;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.el-button--future:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--neon-purple);
+}

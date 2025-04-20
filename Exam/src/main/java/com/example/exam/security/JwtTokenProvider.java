@@ -20,38 +20,28 @@ public class JwtTokenProvider {
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.validity-in-ms}") long validityInMs) {
-        // 使用 Keys.hmacShaKeyFor 生成密钥
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.validityInMs = validityInMs;
-        System.out.println("生成的密钥: " + new String(key.getEncoded(), StandardCharsets.UTF_8));
     }
 
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
-                .subject(userDetails.getUsername())  // 0.12.x 使用 subject() 替代 setSubject()
+                .subject(userDetails.getUsername())  // 用户名
                 .claim("roles", userDetails.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .toList())
-                .issuedAt(new Date())  // 0.12.x 使用 issuedAt() 替代 setIssuedAt()
-                .expiration(new Date(System.currentTimeMillis() + validityInMs))  // 0.12.x 使用 expiration() 替代 setExpiration()
-                .signWith(key)  // 0.12.x 无需指定算法，自动推断
+                        .toList())  // 权限
+                .issuedAt(new Date())  // 生成时间
+                .expiration(new Date(System.currentTimeMillis() + validityInMs))  // 过期时间
+                .signWith(key)  // 签名
                 .compact();
     }
 
     public boolean validateToken(String token) {
-        // 去除 token 中的所有空格
-        String processedToken = token.replaceAll("\\s+", "");
-        // 打印原始的 token
-        System.out.println("原始 Token: " + token);
-        // 打印处理后的 token
-        System.out.println("处理后 Token: " + processedToken);
-
         try {
-            System.out.println("验证时使用的密钥: " + new String(key.getEncoded(), StandardCharsets.UTF_8));
             Jws<Claims> claimsJws = Jwts.parser()
-                    .verifyWith(key)  // 0.12.x 使用 verifyWith() 替代 setSigningKey()
+                    .verifyWith(key)
                     .build()
-                    .parseSignedClaims(processedToken);  // 0.12.x 使用 parseSignedClaims() 替代 parseClaimsJws()
+                    .parseSignedClaims(token);
 
             // 获取令牌的过期时间
             Date expiration = claimsJws.getPayload().getExpiration();
@@ -60,15 +50,11 @@ public class JwtTokenProvider {
 
             // 检查令牌是否过期
             if (expiration != null && expiration.before(now)) {
-                System.out.println("Token 已过期");
                 return false;
-            } else {
-                System.out.println("Token 未过期");
             }
 
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            System.err.println("JWT 验证失败: " + e.getMessage());
             return false;
         }
     }
@@ -78,7 +64,7 @@ public class JwtTokenProvider {
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()  // 0.12.x 使用 getPayload() 替代 getBody()
+                .getPayload()
                 .getSubject();
     }
 }

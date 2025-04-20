@@ -3,6 +3,7 @@ package com.example.exam.config;
 import com.example.exam.filter.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -38,9 +39,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 启用 CORS
                 .csrf(csrf -> csrf.disable()) // 禁用 CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**","api/user/login","api/user/register","/api/user/change-password","api/user/admin/register","api/user/admin/login").permitAll()
+                        .requestMatchers("/api/user/register", "/api/user/login", "/api/user/admin/register", "/api/user/admin/login").permitAll()
                         .requestMatchers("/api/user/change-password").authenticated() // 允许已认证用户访问
-                        .requestMatchers("/api/auth/**").hasRole("ADMIN")
+                        .requestMatchers("/api/question/list").authenticated() // 需要认证
+                        .requestMatchers(HttpMethod.POST, "/api/question/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/question/update").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/question/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // 限制管理员接口
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

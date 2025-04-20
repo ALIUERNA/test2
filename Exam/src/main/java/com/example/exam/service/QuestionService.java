@@ -1,5 +1,6 @@
 package com.example.exam.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.exam.entity.Question;
@@ -73,11 +74,12 @@ public class QuestionService extends ServiceImpl<QuestionMapper, Question> {
     }
 
     public List<Question> getRandomQuestions(int count) {
-        if (count <= 0) {
-            logger.error("获取随机题目的数量必须大于 0");
-            return new ArrayList<>();
-        }
-
-        return questionMapper.selectPage(new Page<>(1, count), null).getRecords();
+        QueryWrapper<Question> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByAsc("RAND()").last("LIMIT " + count);
+        return questionMapper.selectList(queryWrapper);
     }
+    public Page<Question> getQuestionList(int page, int pageSize) {
+        return this.page(new Page<>(page, pageSize));
+    }
+
 }

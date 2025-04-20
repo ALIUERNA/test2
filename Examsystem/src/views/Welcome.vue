@@ -3,7 +3,6 @@
     <div class="header">
       <h1>欢迎使用在线考试系统</h1>
       <p>一个高效、便捷的在线学习和考试平台</p>
-      <!-- 登录后显示用户名 -->
       <div v-if="isLoggedIn" class="user-info">
         <el-icon><User /></el-icon>
         <span>欢迎您，{{ userPhone }}</span>
@@ -13,7 +12,7 @@
     <div class="main-content">
       <el-row :gutter="20">
         <el-col :span="8" v-for="(feature, index) in features" :key="index">
-          <el-card class="feature-card">
+          <el-card class="feature-card" shadow="hover">
             <div class="icon-wrapper">
               <el-icon :size="40" :color="feature.color">
                 <component :is="feature.icon" />
@@ -28,12 +27,12 @@
       <div class="action-area">
         <h2>开始使用</h2>
         <div class="buttons">
-          <!-- 未登录状态 -->
           <el-button
               v-if="!isLoggedIn"
               type="primary"
               size="large"
               @click="navigateToLogin"
+              round
           >
             立即登录
           </el-button>
@@ -41,14 +40,15 @@
               v-if="!isLoggedIn"
               size="large"
               @click="$router.push('/register')"
+              round
           >
             注册账号
           </el-button>
-          <!-- 拆分后的管理员注册和登录按钮 -->
           <el-button
               v-if="!isLoggedIn"
               size="large"
               @click="$router.push('/admin/register')"
+              round
           >
             管理员注册
           </el-button>
@@ -56,15 +56,16 @@
               v-if="!isLoggedIn"
               size="large"
               @click="$router.push('/admin/login')"
+              round
           >
             管理员登录
           </el-button>
-          <!-- 登录后普通用户状态 -->
           <el-button
               v-if="isLoggedIn && !isAdmin"
               type="success"
               size="large"
               @click="$router.push('/change-password')"
+              round
           >
             修改密码
           </el-button>
@@ -73,6 +74,7 @@
               type="success"
               size="large"
               @click="$router.push('/exam')"
+              round
           >
             开始考试
           </el-button>
@@ -81,23 +83,25 @@
               type="success"
               size="large"
               @click="$router.push('/test-records')"
+              round
           >
-            测试次数/分数
+            测试记录
           </el-button>
           <el-button
               v-if="isLoggedIn && !isAdmin"
               type="info"
               size="large"
               @click="handleLogout"
+              round
           >
             退出登录
           </el-button>
-          <!-- 登录后管理员状态 -->
           <el-button
               v-if="isLoggedIn && isAdmin"
               type="warning"
               size="large"
               @click="$router.push('/admin/import-questions')"
+              round
           >
             试卷导入
           </el-button>
@@ -106,6 +110,7 @@
               type="warning"
               size="large"
               @click="$router.push('/admin/view-questions')"
+              round
           >
             查看试题
           </el-button>
@@ -114,6 +119,7 @@
               type="info"
               size="large"
               @click="handleLogout"
+              round
           >
             退出登录
           </el-button>
@@ -122,6 +128,7 @@
               type="success"
               size="large"
               @click="$router.push('/change-password')"
+              round
           >
             修改密码
           </el-button>
@@ -148,20 +155,15 @@ import {
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
-
-// 用户手机号（从localStorage获取）
 const userPhone = ref(localStorage.getItem('phone') || '')
 
-// 检查登录状态（严格模式）
 const isLoggedIn = computed(() => {
   const token = localStorage.getItem('token')
-  return !!token // 严格布尔转换
+  return !!token
 })
 
-// 检查是否是管理员
 const isAdmin = computed(() => localStorage.getItem('isAdmin') === 'true')
 
-// 系统特性展示
 const features = [
   {
     icon: User,
@@ -201,7 +203,6 @@ const features = [
   }
 ]
 
-// 导航到登录页（带错误处理）
 const navigateToLogin = () => {
   try {
     router.push('/login')
@@ -210,10 +211,9 @@ const navigateToLogin = () => {
   }
 }
 
-// 注销登录
 const handleLogout = () => {
   localStorage.clear()
-  window.location.reload() // 强制刷新页面以清除所有状态
+  window.location.reload()
 }
 </script>
 
@@ -222,25 +222,29 @@ const handleLogout = () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
 }
 
 .header {
   text-align: center;
-  padding: 40px 0;
-  background: linear-gradient(135deg, #409EFF, #79BBFF);
+  padding: 60px 0;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
   color: white;
   position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+  font-size: 2.8rem;
+  margin-bottom: 15px;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header p {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   opacity: 0.9;
+  margin-bottom: 0;
 }
 
 .user-info {
@@ -252,54 +256,65 @@ const handleLogout = () => {
   gap: 8px;
   font-size: 1rem;
   background: rgba(255, 255, 255, 0.2);
-  padding: 5px 15px;
-  border-radius: 20px;
+  padding: 8px 18px;
+  border-radius: 30px;
+  backdrop-filter: blur(5px);
 }
 
 .main-content {
   flex: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 40px 20px;
+  width: 100%;
 }
 
 .feature-card {
   height: 100%;
   text-align: center;
   margin-bottom: 20px;
-  transition: transform 0.3s;
-  cursor: default;
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 .icon-wrapper {
-  margin: 20px 0;
+  margin: 25px 0;
 }
 
 .feature-card h3 {
   margin: 15px 0;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  color: #333;
 }
 
 .feature-card p {
   color: #666;
-  line-height: 1.6;
-  padding: 0 10px;
+  line-height: 1.7;
+  padding: 0 15px;
+  font-size: 0.95rem;
 }
 
 .action-area {
   text-align: center;
-  margin: 50px 0;
+  margin: 60px 0 40px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .action-area h2 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   margin-bottom: 30px;
   color: #333;
+  font-weight: 600;
 }
 
 .buttons {
@@ -311,16 +326,31 @@ const handleLogout = () => {
 
 .footer {
   text-align: center;
-  padding: 20px;
-  background-color: #e4e7ed;
-  color: #666;
+  padding: 25px;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
 }
 
-/* 响应式调整 */
 @media (max-width: 768px) {
   .el-col {
     width: 100%;
     margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .header p {
+    font-size: 1.1rem;
+  }
+
+  .user-info {
+    position: static;
+    justify-content: center;
+    margin: 20px auto 0;
+    width: fit-content;
   }
 
   .buttons {
@@ -328,10 +358,9 @@ const handleLogout = () => {
     align-items: center;
   }
 
-  .user-info {
-    position: static;
-    justify-content: center;
-    margin-top: 15px;
+  .action-area {
+    margin: 40px 0;
+    padding: 20px;
   }
 }
 </style>

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static com.baomidou.mybatisplus.extension.toolkit.Db.updateById;
+
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -58,6 +60,21 @@ public class UserController {
         String password = loginInfo.get("password");
         return userService.adminLogin(phone, password); // 传入手机号
     }
+    @GetMapping("/activate")
+    public Result activateAccount(@RequestParam String token) {
+        if (jwtTokenProvider.validateToken(token)) {
+            String phone = jwtTokenProvider.getUsernameFromToken(token);
+            User user = userService.findUserByPhone(phone);
+            if (user != null) {
+                // 激活用户
+                user.setIsActive(true);
+                updateById(user);
+                return Result.success("账户激活成功");
+            }
+        }
+        return Result.error("激活链接无效或已过期");
+    }
+
 
     @PostMapping("/admin/set-privilege")
     @PreAuthorize("hasRole('ADMIN')")

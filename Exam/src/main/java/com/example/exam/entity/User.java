@@ -10,7 +10,7 @@ public class User {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     private String phone;
-    private String idCard;
+    private String idCard; 
     private String password;
     private String name;
     private String email;

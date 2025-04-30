@@ -1,3 +1,6 @@
+server:
+  port: 8080  # 应用程序端口
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -5,17 +8,42 @@ spring:
     username: root
     password: 123456  # 去掉引号
 
-  # JWT 配置
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: 2490097529@qq.com
+    password: paokbvkhqubxeaba  # QQ 邮箱授权码，不是邮箱密码
+    properties:
+      mail:
+        smtp:
+          auth: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            fallback: false
+            port: 465
+          ssl:
+            enable: true
+
+  # Thymeleaf 配置（如果需要）
+  thymeleaf:
+    cache: false  # 开发环境中禁用缓存
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    encoding: UTF-8
+
+app:
+  url: http://localhost:8080  # 应用程序 URL，用于激活邮件链接
+
 jwt:
-  secret: "OAf68/ArXZbnRKdLSyDUMv2CL2AB0JZn5pSbcrw5K9o="  # 至少32字符的密钥
-  validity-in-ms: 86400000  # 令牌有效期（24小时）
+  secret: "OAf68/ArXZbnRKdLSyDUMv2CL2AB0JZn5pSbcrw5K9o="  # 至少 32 字符的密钥
+  validity-in-ms: 86400000  # 令牌有效期（24 小时）
 
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 开启 SQL 日志
     map-underscore-to-camel-case: true  # 下划线转驼峰
 
-# 可选：日志级别调整
 logging:
   level:
-    com.example.exam: DEBUG
+    com.example.exam: DEBUG  # 设置日志级别为 DEBUG

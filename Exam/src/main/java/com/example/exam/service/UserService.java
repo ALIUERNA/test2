@@ -7,6 +7,9 @@ import com.example.exam.mapper.UserMapper;
 import com.example.exam.security.ExamUserDetails;
 import com.example.exam.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,11 +35,21 @@ public class UserService implements UserDetailsService {
     private UserMapper userMapper;
     @Autowired
     private JwtTokenProvider jwtTokenProvider; // 注入 JwtTokenProvider
+    @Autowired
+    private JavaMailSender mailSender; // 注入 JavaMailSender
+
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // 用户注册
+    // 添加邮件配置
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
+    @Value("${app.url}")
+    private String appUrl;
+
+    // 修改注册方法
     @Transactional
     public Result register(User user) {
         if (!user.getPhone().matches("^1[3-9]\\d{9}$")) {
@@ -49,15 +62,75 @@ public class UserService implements UserDetailsService {
 
         user.setPassword(encryptPassword(user.getPassword()));
         user.setIsAdmin(false);
-        user.setIsActive(true);
+        user.setIsActive(false); // 注册后默认未激活
 
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName("用户_" + user.getPhone().substring(7));
         }
 
-        return userMapper.insert(user) > 0 ?
-                Result.success("注册成功") :
-                Result.error("注册失败");
+        int result = userMapper.insert(user);
+        if (result > 0) {
+            // 注册成功后发送激活邮件
+            sendActivationEmail(user);
+            return Result.success("注册成功，请查看邮箱激活账号");
+        } else {
+            return Result.error("注册失败");
+        }
+    }
+
+    // 发送激活邮件
+    private void sendActivationEmail(User user) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(user.getEmail());
+            message.setSubject("请激活您的账户");
+
+            String activationLink = appUrl + "/api/user/activate?token=" + generateActivationToken(user);
+
+            String emailContent = "亲爱的 " + user.getName() + "同学,\n\n" +
+                    "感谢您注册我们的服务！\n\n" +
+                    "请单击下面的链接以激活您的帐户:\n" +
+                    activationLink + "\n\n" +
+                    "如果链接无法点击，请复制到浏览器地址栏访问。\n\n" +
+                    "祝您使用愉快！\n\n" +
+                    "  ╭(●｀∀´●)╯\n" +
+                    "  ╰(●'◡'●)╮\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\uD83D\uDFE6\n" +
+                    "\uD83D\uDFE6\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE6\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEA\uD83D\uDFE8\uD83D\uDFEB\n" +
+                    "\uD83D\uDFEB\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFE8\uD83D\uDFEB孩子们我回来了！⠀";
+
+            message.setText(emailContent);
+
+            mailSender.send(message);
+            logger.info("激活邮件已发送至: {}", user.getEmail());
+        } catch (Exception e) {
+            logger.error("发送激活邮件失败: {}", e.getMessage());
+        }
+    }
+
+    // 生成激活令牌
+    private String generateActivationToken(User user) {
+        return jwtTokenProvider.generateToken(
+                new ExamUserDetails(
+                        user.getPhone(),
+                        user.getPassword(),
+                        getAuthorities(user.getIsAdmin()),
+                        user.getIsActive()
+                )
+        );
     }
 
     // 用户登录
@@ -66,7 +139,7 @@ public class UserService implements UserDetailsService {
         User user = userMapper.selectOne(
                 new QueryWrapper<User>()
                         .eq("phone", phone)
-                        .select("id", "phone", "password", "name", "is_admin", "is_active")
+                        .select("id", "phone", "password", "name", "is_admin", "is_active", "email") // 确保查询email字段
         );
 
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
@@ -77,8 +150,9 @@ public class UserService implements UserDetailsService {
             return Result.error("账户已被禁用");
         }
 
+
         String token = generateToken(user);
-        logger.info("生成的令牌:{}", token); // 输出生成的令牌
+        logger.info("生成的令牌:{}", token);
 
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);

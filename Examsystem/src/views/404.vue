@@ -20,16 +20,14 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { useRouter } from 'vue-router'
 import { HomeFilled, Picture } from '@element-plus/icons-vue';
 
-export default {
-  components: { HomeFilled, Picture },
-  methods: {
-    goHome() {
-      this.$router.push('/')
-    }
-  }
+const router = useRouter()
+
+const goHome = () => {
+  router.push('/')
 }
 </script>
 

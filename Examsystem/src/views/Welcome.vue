@@ -125,6 +125,15 @@
           </el-button>
           <el-button
               v-if="isLoggedIn && isAdmin"
+              type="primary"
+              size="large"
+              @click="$router.push('/test-records')"
+              round
+          >
+            查看成绩记录
+          </el-button>
+          <el-button
+              v-if="isLoggedIn && isAdmin"
               type="success"
               size="large"
               @click="$router.push('/change-password')"

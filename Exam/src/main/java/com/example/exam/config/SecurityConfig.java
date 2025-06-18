@@ -59,7 +59,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // 允许的域
+        configuration.setAllowedOrigins(List.of("http://localhost:5174")); // 允许的域
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 允许的方法
         configuration.setAllowedHeaders(List.of("*")); // 允许的头
         configuration.setAllowCredentials(true); // 允许凭据

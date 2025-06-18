@@ -107,103 +107,100 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import {ref, onMounted, onBeforeUnmount, computed} from 'vue'
 import request from '@/utils/request';
 import { Clock, Loading } from '@element-plus/icons-vue';
+import {ElMessage} from "element-plus";
 
-export default {
-  components: { Clock, Loading },
-  data() {
-    return {
-      questions: [],
-      answers: [],
-      submitted: false,
-      result: {
-        correctCount: 0,
-        wrongCount: 0,
-        score: 0
-      },
-      confirmDialogVisible: false,
-      loading: true,
-      currentQuestion: 0,
-      timeLeft: 1800 // 30分钟
-    };
-  },
-  computed: {
-    formattedTime() {
-      const minutes = Math.floor(this.timeLeft / 60);
-      const seconds = this.timeLeft % 60;
-      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+const questions = ref([])
+const answers = ref([])
+const submitted = ref(false)
+const result = ref({
+  correctCount: 0,
+  wrongCount: 0,
+  score: 0
+})
+const confirmDialogVisible = ref(false)
+const loading = ref(true)
+const currentQuestion = ref(0)
+const timeLeft = ref(1800) // 30分钟
+let timer = null
+
+onMounted(() => {
+  fetchQuestions();
+  startTimer();
+})
+
+onBeforeUnmount(() => {
+  clearInterval(timer);
+})
+
+const formattedTime = computed(() => {
+  const minutes = Math.floor(timeLeft.value / 60);
+  const seconds = timeLeft.value % 60;
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+})
+
+const fetchQuestions = async () => {
+  loading.value = true;
+  submitted.value = false;
+  try {
+    const response = await request.get('/api/question/random', {
+      params: { count: 10 }
+    })
+
+    if (response && response.code === '200' && Array.isArray(response.data)) {
+      questions.value = response.data;
+      answers.value = new Array(questions.value.length).fill('');
+      currentQuestion.value = 0;
+    } else {
+      ElMessage.error('获取题目失败');
     }
-  },
-  created() {
-    this.fetchQuestions();
-    this.startTimer();
-  },
-  beforeUnmount() {
-    clearInterval(this.timer);
-  },
-  methods: {
-    fetchQuestions() {
-      this.loading = true;
-      this.submitted = false;
-      request.get('/api/question/random', {
-        params: { count: 10 }
-      })
-          .then(response => {
-            if (response && response.code === '200' && Array.isArray(response.data)) {
-              this.questions = response.data;
-              this.answers = new Array(this.questions.length).fill('');
-              this.currentQuestion = 0;
-            } else {
-              this.$message.error('获取题目失败');
-            }
-          })
-          .catch(error => {
-            this.$message.error('获取题目失败');
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-    },
-    startTimer() {
-      this.timer = setInterval(() => {
-        if (this.timeLeft > 0 && !this.submitted) {
-          this.timeLeft--;
-        } else if (!this.submitted) {
-          this.submitTest();
-          clearInterval(this.timer);
-        }
-      }, 1000);
-    },
-    showConfirmDialog() {
-      if (this.answers.some(answer => !answer)) {
-        this.$message.warning('您还有未完成的题目，确定要提交吗？');
-      }
-      this.confirmDialogVisible = true;
-    },
-    submitTest() {
-      this.confirmDialogVisible = false;
-      request.post('/api/test/submit', this.answers)
-          .then(response => {
-            if (response && response.code === '200' && response.data) {
-              this.submitted = true;
-              this.result = {
-                correctCount: response.data.correctCount,
-                wrongCount: response.data.wrongCount,
-                score: response.data.score
-              };
-              clearInterval(this.timer);
-            } else {
-              this.$message.error('提交考试失败');
-            }
-          })
-          .catch(error => {
-            this.$message.error('提交失败');
-          });
-    }
+  } catch (error) {
+    ElMessage.error('获取题目失败');
+  } finally {
+    loading.value = false;
   }
-};
+}
+
+const startTimer = () => {
+  timer = setInterval(() => {
+    if (timeLeft.value > 0 && !submitted.value) {
+      timeLeft.value--;
+    } else if (!submitted.value) {
+      submitTest();
+      clearInterval(timer);
+    }
+  }, 1000);
+}
+
+const showConfirmDialog = () => {
+  if (answers.value.some(answer => !answer)) {
+    ElMessage.warning('您还有未完成的题目，确定要提交吗？');
+  }
+  confirmDialogVisible.value = true;
+}
+
+const submitTest = async () => {
+  confirmDialogVisible.value = false;
+  try {
+    const response = await request.post('/api/test/submit', answers.value)
+    if (response && response.code === '200' && response.data) {
+      submitted.value = true;
+      result.value = {
+        correctCount: response.data.correctCount,
+        wrongCount: response.data.wrongCount,
+        score: response.data.score
+      };
+      clearInterval(timer);
+    } else {
+      ElMessage.error('提交考试失败');
+    }
+  } catch (error) {
+    ElMessage.error('提交失败');
+  }
+}
 </script>
 
 <style scoped>

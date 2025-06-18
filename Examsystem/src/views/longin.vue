@@ -50,60 +50,58 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Iphone, Lock, UserFilled } from '@element-plus/icons-vue'
 import request from '@/utils/request';
-import { Iphone, Lock, UserFilled } from '@element-plus/icons-vue';
 
-export default {
-  components: { Iphone, Lock, UserFilled },
-  data() {
-    return {
-      form: {
-        phone: '',
-        password: ''
-      },
-      rules: {
-        phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
-        ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
-        ]
-      }
-    };
-  },
-  methods: {
-    submitForm() {
-      this.$refs.loginForm.validate((valid) => {
-        if (valid) {
-          request.post('/api/user/login', this.form)
-              .then(response => {
-                if (response && response.data && response.data.token) {
-                  localStorage.clear();
-                  const token = response.data.token.trim();
-                  localStorage.setItem('token', token);
-                  localStorage.setItem('userId', response.data.userId);
-                  localStorage.setItem('isAdmin', response.data.isAdmin || false);
-                  localStorage.setItem('phone', this.form.phone);
+const router = useRouter()
+const loginForm = ref(null)
+const form = reactive({
+  phone: '',
+  password: ''
+})
 
-                  this.$router.push('/').then(() => {
-                    window.location.reload();
-                  });
-                } else {
-                  this.$message.error('登录失败：未获取到有效的 token');
-                  localStorage.clear();
-                }
-              })
-              .catch(error => {
-                this.$message.error('登录失败: ' + (error.message || '请检查用户名和密码'));
-                localStorage.clear();
+const rules = {
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' }
+  ]
+}
+
+const submitForm = () => {
+  loginForm.value.validate((valid) => {
+    if (valid) {
+      request.post('/api/user/login', form)
+          .then(response => {
+            if (response && response.data && response.data.token) {
+              localStorage.clear();
+              const token = response.data.token.trim();
+              localStorage.setItem('token', token);
+              localStorage.setItem('userId', response.data.userId);
+              localStorage.setItem('isAdmin', response.data.isAdmin || false);
+              localStorage.setItem('phone', form.phone);
+
+              router.push('/').then(() => {
+                window.location.reload();
               });
-        }
-      });
+            } else {
+              ElMessage.error('登录失败：未获取到有效的 token');
+              localStorage.clear();
+            }
+          })
+          .catch(error => {
+            ElMessage.error('登录失败: ' + (error.message || '请检查用户名和密码'));
+            localStorage.clear();
+          });
     }
-  }
-};
+  });
+}
 </script>
 
 <style scoped>

@@ -44,66 +44,64 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Iphone, User, Avatar, Message } from '@element-plus/icons-vue'
 import request from '@/utils/request.js';
-import { Iphone, User, Avatar, Message } from '@element-plus/icons-vue';
 
-export default {
-  components: {Iphone, User, Avatar, Message},
-  data() {
-    return {
-      form: {
-        phone: '',
-        idCard: '',
-        name: '',
-        email: '',
-        password: ''
-      },
-      rules: {
-        phone: [
-          {required: true, message: '请输入手机号', trigger: 'blur'},
-          {pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}
-        ],
-        idCard: [
-          {required: true, message: '请输入身份证号', trigger: 'blur'},
-          {
-            pattern: /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\d{3}[0-9Xx]$/,
-            message: '身份证号格式不正确',
-            trigger: 'blur'
-          }
-        ],
-        name: [
-          {required: true, message: '请输入姓名', trigger: 'blur'}
-        ],
-        email: [
-          {required: true, message: '请输入邮箱', trigger: 'blur'},
-          {type: 'email', message: '邮箱格式不正确', trigger: 'blur'}
-        ]
-      }
-    };
-  },
-  methods: {
-    submitForm() {
-      this.$refs.registerForm.validate((valid) => {
-        if (valid) {
-          this.form.password = this.form.idCard.slice(-6);
+const router = useRouter()
+const registerForm = ref(null)
+const form = reactive({
+  phone: '',
+  idCard: '',
+  name: '',
+  email: '',
+  password: ''
+})
 
-          request.post('/api/user/register', this.form)
-              .then(response => {
-                if (response.code === "200") {
-                  this.$message.success('注册成功，请查看邮箱激活账号');
-                  this.$router.push('/login');
-                } else {
-                  this.$message.error(response.message || '注册失败');
-                }
-              })
-              .catch(error => {
-                this.$message.error(error.message || '注册失败');
-              });
-        }
-      });
+const rules = {
+  phone: [
+    {required: true, message: '请输入手机号', trigger: 'blur'},
+    {pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}
+  ],
+  idCard: [
+    {required: true, message: '请输入身份证号', trigger: 'blur'},
+    {
+      pattern: /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\d{3}[0-9Xx]$/,
+      message: '身份证号格式不正确',
+      trigger: 'blur'
     }
-  }
+  ],
+  name: [
+    {required: true, message: '请输入姓名', trigger: 'blur'}
+  ],
+  email: [
+    {required: true, message: '请输入邮箱', trigger: 'blur'},
+    {type: 'email', message: '邮箱格式不正确', trigger: 'blur'}
+  ]
+}
+
+const submitForm = () => {
+  registerForm.value.validate((valid) => {
+    if (valid) {
+      form.password = form.idCard.slice(-6);
+
+      request.post('/api/user/register', form)
+          .then(response => {
+            if (response.code === "200") {
+              ElMessage.success('注册成功，请查看邮箱激活账号');
+              router.push('/login');
+            } else {
+              ElMessage.error(response.message || '注册失败');
+            }
+          })
+          .catch(error => {
+            ElMessage.error(error.message || '注册失败');
+          });
+    }
+  });
 }
 </script>
 

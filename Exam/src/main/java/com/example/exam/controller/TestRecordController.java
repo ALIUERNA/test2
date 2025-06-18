@@ -5,10 +5,8 @@ package com.example.exam.controller;
 import com.example.exam.common.Result;
 import com.example.exam.service.TestRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,5 +20,17 @@ public class TestRecordController {
     @PostMapping("/submit")
     public Result submitTest(@RequestBody List<String> answers) {
         return testRecordService.submitTest(answers);
+    }
+    // TestRecordController.java
+    @GetMapping("/records")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public Result getTestRecords() {
+        return testRecordService.getTestRecordsForCurrentUser();
+    }
+
+    @GetMapping("/admin/all-records")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result getAllTestRecords() {
+        return testRecordService.getAllTestRecordsForAdmin();
     }
 }

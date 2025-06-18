@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import TestRecords from "@/views/TestRecords.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -70,6 +71,12 @@ const router = createRouter({
         requiresAuth: true,
         requiresAdmin: true
       }
+    },
+    {
+      path: '/test-records',
+      name: 'TestRecords',
+      component: TestRecords,
+      meta: { requiresAuth: true }
     },
     {
       path: '/:pathMatch(.*)*',
